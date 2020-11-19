@@ -5,6 +5,13 @@ extern crate serde_json;
 extern crate serde;
 
 #[derive(serde::Serialize)]
+struct Routes {
+    imported: String,
+    exported: String,
+    preferred: String
+}
+
+#[derive(serde::Serialize)]
 struct Peer {
     name: String,
     protocol: String,
@@ -12,7 +19,9 @@ struct Peer {
     neighbor_address: String,
     description: String,
     neighbor_as: String,
-    neighbor_id: String
+    neighbor_id: String,
+    v4_routes: Routes,
+    v6_routes: Routes
 }
 
 fn main() {
@@ -30,6 +39,7 @@ fn main() {
     let mut peer_index:usize = 0;
     let mut channel_check: String = String::new();
     let mut channel_checking: bool = false;
+    let mut channel_up: bool = false;
 
     for line in &birdc_output{
 
@@ -37,6 +47,7 @@ fn main() {
 
         if channel_checking {
             if line_split[1].as_str() == "UP" {
+                channel_up = true;
                 peers[peer_index].protocol.push_str(channel_check.as_str());
 
                 if peers[peer_index].protocol.as_str() == "ipv4ipv6" {
@@ -58,7 +69,17 @@ fn main() {
                    neighbor_address: "".to_string(),
                    description: "".to_string(),
                    neighbor_as: "".to_string(),
-                   neighbor_id: "".to_string()
+                   neighbor_id: "".to_string(),
+                   v4_routes: Routes {
+                       imported: "".to_string(),
+                       exported: "".to_string(),
+                       preferred: "".to_string()
+                   },
+                   v6_routes: Routes {
+                       imported: "".to_string(),
+                       exported: "".to_string(),
+                       preferred: "".to_string()
+                   },
                });
            } else {
                scanning_peer = false;
@@ -84,8 +105,22 @@ fn main() {
                 }
                 "Channel" => {
                     channel_checking = true;
+                    channel_up = false;
                     channel_check = line_split[1].clone();
-                }
+                },
+                "Routes:" => {
+                  if channel_up {
+                      if channel_check == "ipv4" {
+                          peers[peer_index].v4_routes.imported = line_split[1].clone();
+                          peers[peer_index].v4_routes.exported = line_split[3].clone();
+                          peers[peer_index].v4_routes.preferred = line_split[5].clone();
+                      } else if channel_check == "ipv6" {
+                          peers[peer_index].v6_routes.imported = line_split[1].clone();
+                          peers[peer_index].v6_routes.exported = line_split[3].clone();
+                          peers[peer_index].v6_routes.preferred = line_split[5].clone();
+                      }
+                  }
+                },
                 _ => {}
             }
         }
