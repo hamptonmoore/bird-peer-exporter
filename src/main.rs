@@ -6,9 +6,9 @@ extern crate serde;
 
 #[derive(serde::Serialize)]
 struct Routes {
-    imported: String,
-    exported: String,
-    preferred: String
+    imported: u16,
+    exported: u16,
+    preferred: u16
 }
 
 #[derive(serde::Serialize)]
@@ -18,7 +18,7 @@ struct Peer {
     bgp_state: String,
     neighbor_address: String,
     description: String,
-    neighbor_as: String,
+    neighbor_as: u32,
     neighbor_id: String,
     v4_routes: Routes,
     v6_routes: Routes
@@ -68,17 +68,17 @@ fn main() {
                    bgp_state: line_split[5].clone(),
                    neighbor_address: "".to_string(),
                    description: "".to_string(),
-                   neighbor_as: "".to_string(),
+                   neighbor_as: 0,
                    neighbor_id: "".to_string(),
                    v4_routes: Routes {
-                       imported: "".to_string(),
-                       exported: "".to_string(),
-                       preferred: "".to_string()
+                       imported: 0,
+                       exported: 0,
+                       preferred: 0
                    },
                    v6_routes: Routes {
-                       imported: "".to_string(),
-                       exported: "".to_string(),
-                       preferred: "".to_string()
+                       imported: 0,
+                       exported: 0,
+                       preferred: 0
                    },
                });
            } else {
@@ -92,7 +92,7 @@ fn main() {
                 "Neighbor" => {
                     match line_split[1].as_str() {
                         "AS:" => {
-                            peers[peer_index].neighbor_as = line_split[2].clone();
+                            peers[peer_index].neighbor_as = line_split[2].parse::<u32>().unwrap();
                         },
                         "ID:" => {
                             peers[peer_index].neighbor_id = line_split[2].clone();
@@ -111,13 +111,13 @@ fn main() {
                 "Routes:" => {
                   if channel_up {
                       if channel_check == "ipv4" {
-                          peers[peer_index].v4_routes.imported = line_split[1].clone();
-                          peers[peer_index].v4_routes.exported = line_split[3].clone();
-                          peers[peer_index].v4_routes.preferred = line_split[5].clone();
+                          peers[peer_index].v4_routes.imported = line_split[1].parse::<u16>().unwrap();
+                          peers[peer_index].v4_routes.exported = line_split[3].parse::<u16>().unwrap();
+                          peers[peer_index].v4_routes.preferred = line_split[5].parse::<u16>().unwrap();
                       } else if channel_check == "ipv6" {
-                          peers[peer_index].v6_routes.imported = line_split[1].clone();
-                          peers[peer_index].v6_routes.exported = line_split[3].clone();
-                          peers[peer_index].v6_routes.preferred = line_split[5].clone();
+                          peers[peer_index].v6_routes.imported = line_split[1].parse::<u16>().unwrap();
+                          peers[peer_index].v6_routes.exported = line_split[3].parse::<u16>().unwrap();
+                          peers[peer_index].v6_routes.preferred = line_split[5].parse::<u16>().unwrap();
                       }
                   }
                 },
